@@ -36,7 +36,7 @@ export const BILL_TYPES = {
   ENTITY: '3', // байгууллагад өгөх баримт
   INVOICE: '5', // нэхэмжлэхээр өгөх баримт
   INNER: '9', // дотоод буюу түр
-  ALL: ['1', '3', '5', '9', null],
+  ALL: ['1', '3', '9', null],
 };
 
 export const ORDER_RETURN_TYPES = {
