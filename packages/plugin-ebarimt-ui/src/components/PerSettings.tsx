@@ -145,7 +145,6 @@ class PerSettings extends React.Component<Props, State> {
           />
         </FormGroup>
         {this.renderInput('companyName', 'companyName', 'optional')}
-        {this.renderInput('userEmail', 'userEmail', '')}
 
         <FormGroup>
           <ControlLabel>{__('Provice/District')}</ControlLabel>
@@ -157,14 +156,17 @@ class PerSettings extends React.Component<Props, State> {
             required={true}
           />
         </FormGroup>
-
         {this.renderInput('companyRD', 'companyRD', '')}
-        {this.renderInput('vatPercent', 'vatPercent', '')}
-        {this.renderInput('cityTaxPercent', 'cityTaxPercent', '')}
+        {this.renderInput('merchantTin', 'merchantTin', '')}
+        {this.renderInput('posNo', 'posNo', '')}
+        {this.renderInput('districtCode', 'districtCode', '')}
+        {this.renderInput('branchNo', 'branchNo', '')}
         {this.renderInput('defaultGSCode', 'defaultGSCode', '')}
-
         {this.renderCheckbox('hasVat', 'has Vat', '')}
+        {this.renderInput('vatPercent', 'vatPercent', '')}
         {this.renderCheckbox('hasCitytax', 'has Citytax', '')}
+        {this.renderInput('cityTaxPercent', 'cityTaxPercent', '')}
+
         {this.renderCheckbox(
           'skipPutData',
           'skip Ebarimt',
