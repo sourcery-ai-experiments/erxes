@@ -1,6 +1,8 @@
 import graphqlPubsub from '@erxes/api-utils/src/graphqlPubsub';
+import * as moment from 'moment';
+import { nanoid } from 'nanoid';
 import { IModels } from './connectionResolver';
-import { PutData } from './models/utils';
+import { IDoc, getEbarimtData } from './models/utils';
 import { getConfig, getPostData } from './utils';
 
 export default {
@@ -76,55 +78,56 @@ export const afterMutationHandlers = async (
         ...configs[destinationStageId],
       };
 
-      const ebarimtDatas = await getPostData(subdomain, config, deal);
+      const ebarimtData: IDoc = await getPostData(subdomain, config, deal);
 
-      const ebarimtResponses: any[] = [];
+      let ebarimtResponse;
 
-      for (const ebarimtData of ebarimtDatas) {
-        let ebarimtResponse;
+      if (config.skipPutData) {
+        const eData = await getEbarimtData({ config, doc: ebarimtData });
+        const { status, msg, data } = eData;
 
-        if (config.skipPutData || ebarimtData.inner) {
-          const putData = new PutData({
-            ...config,
-            ...ebarimtData,
-            config,
-            models,
-          });
+        if (status === 'err' || (status !== 'ok' || !data)) {
           ebarimtResponse = {
-            _id: Math.random(),
-            billId: 'Түр баримт',
-            ...(await putData.generateTransactionInfo()),
+            _id: nanoid(),
+            id: 'Error',
+            status: 'ERROR',
+            message: msg
+          }
+        } else {
+          ebarimtResponse = {
+            _id: nanoid(),
+            ...data,
+            id: 'Түр баримт',
+            status: 'SUCCESS',
+            date: moment(new Date).format('"yyyy-MM-dd HH:mm:ss'),
             registerNo: config.companyRD || '',
           };
-        } else {
-          try {
-            ebarimtResponse = await models.PutResponses.putData(
-              ebarimtData,
-              config,
-            );
-          } catch (e) {
-            ebarimtResponse = {
-              _id: `Err${Math.random()}`,
-              billId: 'Error',
-              success: 'false',
-              message: e.message
-            }
-          }
-
         }
-        if (ebarimtResponse._id) {
-          ebarimtResponses.push(ebarimtResponse);
+
+      } else {
+        try {
+          ebarimtResponse = await models.PutResponses.putData(
+            ebarimtData,
+            config,
+          );
+        } catch (e) {
+          ebarimtResponse = {
+            _id: nanoid(),
+            id: 'Error',
+            status: 'ERROR',
+            message: e.message
+          }
         }
       }
 
       try {
-        if (ebarimtResponses.length) {
+        if (ebarimtResponse) {
           await graphqlPubsub.publish(`automationResponded:${user._id}`, {
             automationResponded: {
               userId: user._id,
-              responseId: ebarimtResponses.map((er) => er._id).join('-'),
+              responseId: ebarimtResponse.id,
               sessionCode: user.sessionCode || '',
-              content: ebarimtResponses.map((er) => ({ ...config, ...er })),
+              content: [{ ...config, ...ebarimtResponse }],
             },
           });
         }
